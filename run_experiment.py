@@ -270,7 +270,11 @@ def run_experiment(method, mu):
 
     wandb_run = start_run(
         project=WANDB_PROJECT,
-        run_name=method.lower(),
+       run_name=(
+    "fedavg_seed42"
+    if method == "FedAvg"
+    else f"fedprox_mu{mu}_seed42"
+    ),
         config={
             "method": method,
             "num_clients": NUM_CLIENTS,
