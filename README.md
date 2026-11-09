@@ -19,7 +19,7 @@ The system simulates collaborative model training across five clients. Each clie
 
 The experiments investigate the effects of heterogeneous (non-IID) data distributions and noisy labels on federated learning performance.
 
-The implementation also evaluates global and client-level performance and analyses model update norms and cosine similarities using Weights & Biases (W&B).
+The implementation evaluates global and client-level performance and analyses model update norms and cosine similarities using Weights & Biases (W&B).
 
 ## 2. Objectives
 
@@ -96,7 +96,7 @@ The dataset directory is generated automatically when the experiment script runs
 
 ## 5. Experimental Configuration
 
-The experiments use the following configuration:
+The principal experimental setup uses the following configuration:
 
 | Parameter | Configuration |
 |---|---|
@@ -114,13 +114,14 @@ The experiments use the following configuration:
 | Local epochs | 1 |
 | Batch size | 128 |
 | Learning rate | 0.01 |
-| FedProx coefficient (μ) | 0.1 |
-| Random seed | 42 |
-| Compute device | CPU for the verified FedProx run |
+| FedProx coefficient (μ) | 0.1 for the corresponding FedProx run |
+| Random seed | 42 for the verified seed-42 runs |
+
+**Verified FedProx configuration:** The `fedprox_mu0.1_seed42` W&B run records α = 0.3, five clients, 40% label noise on Client 5, two communication rounds, one local epoch, batch size 128, learning rate 0.01, μ = 0.1, seed 42 and CPU execution.
 
 **Data handling:** Label noise is applied exclusively to Client 5's training labels. Validation data retains its original clean labels.
 
-The experiments use a fixed two-round configuration for the current preliminary comparison.
+The current comparison uses two communication rounds and should be interpreted as a preliminary experiment rather than a convergence study.
 
 ## 6. Implementation Details
 
@@ -161,7 +162,7 @@ The implementation evaluates:
 - Individual client update norms.
 - Cosine similarity values.
 
-These metrics help analyse the differences in learning behaviour across heterogeneous clients.
+These metrics help analyse differences in learning behaviour across heterogeneous clients.
 
 ### 6.7 Experiment Tracking
 
@@ -178,7 +179,7 @@ The tracked metrics include:
 
 ## 7. Experimental Results
 
-The following results represent the recorded two-round experimental comparison.
+The following results represent the recorded two-round FedAvg and FedProx comparison.
 
 ### 7.1 FedAvg vs. FedProx
 
@@ -191,11 +192,11 @@ The following results represent the recorded two-round experimental comparison.
 
 ### 7.2 Key Observations
 
-- FedAvg achieved higher global test accuracy than FedProx in the recorded experiment.
+- FedAvg achieved higher global test accuracy than FedProx in the recorded comparison.
 - FedProx produced a smaller global update norm.
 - Client-level validation performance varied across the five clients.
-- Both algorithms were evaluated under non-IID data and noisy-label conditions.
-- The global and client-level update statistics provide additional insight into optimisation behaviour.
+- Both algorithms were evaluated under non-IID data and label-noise conditions.
+- Global and client-level update statistics provide additional insight into optimisation behaviour.
 
 **Interpretation:** These results are preliminary and based on two communication rounds. They should not be interpreted as evidence of convergence or definitive superiority of either algorithm.
 
