@@ -1,27 +1,29 @@
-# Federated Learning Benchmark on PathMNIST
+# Federated Learning Benchmark on PathMNIST: FedAvg vs. FedProx
 
-## 1. Project Overview
+## Project Overview
 
-This project implements and evaluates two federated learning algorithms, **Federated Averaging (FedAvg)** and **Federated Proximal (FedProx)**, using the PathMNIST medical imaging dataset from MedMNIST.
+This project implements and evaluates two federated learning algorithms, **Federated Averaging (FedAvg)** and **Federated Proximal (FedProx)**, on the PathMNIST medical imaging dataset from MedMNIST.
 
-The objective is to investigate collaborative model training across distributed clients while keeping their training data local. The experiments examine non-IID data distributions and label noise, evaluating their effects on global and client-level model performance.
+The benchmark studies federated model training under heterogeneous client data distributions and label noise. Five clients participate in collaborative training while keeping their local training data separate. A non-IID data distribution is created using Dirichlet partitioning, and 40% label noise is introduced into the training labels of one client.
 
-The project also analyzes client update behavior through update norms and cosine similarity, with experiment tracking using Weights & Biases (W&B).
+Both algorithms are evaluated over 30 communication rounds and three random seeds. The experiments track global model performance, individual client performance, and model update behavior.
 
-## 2. Objectives
+Experiment metrics are logged to Weights & Biases (W&B) for tracking and analysis.
 
-- Implement and compare FedAvg and FedProx.
-- Simulate federated learning across five clients.
-- Study non-IID data distribution using Dirichlet partitioning.
-- Apply 40% label noise to one client's training data.
-- Evaluate global test accuracy and loss.
-- Track individual client accuracy and loss.
-- Analyze client update norms and cosine similarity.
-- Visualize global and client-level performance.
-- Evaluate reproducibility across three random seeds.
-- Track experimental runs using W&B.
+## Objectives
 
-## 3. Technologies Used
+- Implement Federated Averaging (FedAvg).
+- Implement Federated Proximal (FedProx).
+- Simulate federated learning with five clients.
+- Create non-IID client data partitions using Dirichlet distribution.
+- Introduce 40% label noise into one client's training labels.
+- Compare global test accuracy and loss.
+- Track individual client training and validation metrics.
+- Analyze model update norms and cosine similarity.
+- Evaluate performance across three random seeds.
+- Record experiment metrics using Weights & Biases.
+
+## Technologies Used
 
 - Python
 - PyTorch
@@ -34,7 +36,132 @@ The project also analyzes client update behavior through update norms and cosine
 - Weights & Biases
 - Pytest
 
-## 4. Project Structure
+## Experimental Setup
+
+| Parameter | Configuration |
+|---|---|
+| Dataset | PathMNIST (MedMNIST) |
+| Learning framework | PyTorch |
+| Number of clients | 5 |
+| Data distribution | Non-IID |
+| Partitioning method | Dirichlet distribution |
+| Dirichlet concentration (α) | 0.3 |
+| Label noise | 40% on one client's training labels |
+| Noisy client | Client 5 |
+| Algorithms | FedAvg and FedProx |
+| Communication rounds | 30 |
+| Random seeds | 42, 43, 44 |
+| FedProx proximal coefficient (μ) | 0.1 |
+| Number of experiment runs | 6 |
+| Experiment tracking | Weights & Biases |
+
+Three independent runs were conducted for each algorithm using the same random seeds, resulting in six experiment runs in total.
+
+## Algorithms
+
+### 1. Federated Averaging (FedAvg)
+
+FedAvg is a federated optimization algorithm in which clients train their models locally and send model updates to a central server. The server aggregates the local models, typically using a weighted average based on the number of training samples at each client.
+
+### 2. Federated Proximal (FedProx)
+
+FedProx extends FedAvg by adding a proximal regularization term to the local training objective. This term penalizes deviations from the current global model and is intended to help manage statistical and systems heterogeneity among clients.
+
+The proximal coefficient used in these experiments is μ = 0.1.
+
+## Implementation Details
+
+The experiment pipeline includes:
+
+- **Dataset preparation:** Loading and preprocessing PathMNIST using MedMNIST.
+- **Client partitioning:** Distributing training data across five clients using a Dirichlet distribution with α = 0.3.
+- **Label noise:** Introducing 40% label noise into the training labels of Client 5.
+- **Local training:** Training client models independently during each communication round.
+- **Server aggregation:** Applying FedAvg or FedProx according to the selected algorithm.
+- **Global evaluation:** Evaluating the aggregated global model on the global test dataset.
+- **Client-level evaluation:** Recording individual client training and validation accuracy and loss.
+- **Update analysis:** Tracking model update norms and cosine similarity.
+- **Experiment tracking:** Logging metrics across communication rounds to Weights & Biases.
+
+## Experimental Results
+
+The following results represent the **mean ± standard deviation across three runs (seeds 42, 43, and 44)** after 30 communication rounds.
+
+### FedAvg vs. FedProx
+
+| Metric | FedAvg | FedProx |
+|---|---:|---:|
+| Global test accuracy | **70.43% ± 3.67%** | 68.43% ± 4.45% |
+| Global test loss | **0.9545 ± 0.0892** | 1.0362 ± 0.0922 |
+| Mean client validation accuracy | **66.01% ± 3.16%** | 61.22% ± 2.93% |
+| Global update norm | 0.3211 ± 0.0498 | **0.2285 ± 0.0307** |
+
+### Noisy Client Analysis
+
+Client 5 received 40% label noise in its training labels. Its validation performance was compared with the average validation performance of the four clean clients.
+
+| Metric | FedAvg | FedProx |
+|---|---:|---:|
+| Noisy client validation accuracy | 61.91% ± 5.73% | 54.45% ± 3.59% |
+| Mean clean-client validation accuracy | 67.03% ± 4.00% | 62.91% ± 3.74% |
+| Noisy-minus-clean accuracy gap | -5.12 percentage points | -8.46 percentage points |
+
+### Results and Observations
+
+1. **Global performance:** FedAvg achieved a mean test accuracy of 70.43%, compared with 68.43% for FedProx. FedAvg also recorded a lower mean test loss in this experimental configuration.
+
+2. **Client-level performance:** FedAvg achieved higher mean client validation accuracy than FedProx across the three runs.
+
+3. **Noisy-client behavior:** Client 5 showed lower validation accuracy than the average of the clean clients under both algorithms.
+
+4. **Impact of label noise:** The average noisy-minus-clean validation accuracy gap was -5.12 percentage points for FedAvg and -8.46 percentage points for FedProx.
+
+5. **Model update behavior:** FedProx recorded a smaller mean global update norm than FedAvg. This indicates smaller measured global model updates in these experiments; it does not, by itself, establish better convergence or generalization.
+
+6. **Variation across runs:** The standard deviations show that performance varied across random seeds, reinforcing the importance of evaluating federated learning methods across multiple runs.
+
+**Overall observation:** FedAvg performed better on the reported global test and client validation metrics in this particular setup. FedProx produced smaller global update norms, but did not achieve higher test accuracy or better noisy-client validation accuracy here. These findings are specific to the dataset, partitioning, noise level, model, and optimization settings used in this benchmark. They should not be interpreted as a universal ranking of the two algorithms.
+
+## Experiment Tracking
+
+All six experiment runs were logged to the Weights & Biases project.
+
+**W&B Project:**  
+[IndiaAI Federated PathMNIST Benchmark](https://forge.coreweave.com/wandb/sumukhipandey22-k-r-mangalam-university/indiaai-federated-pathmnist)
+
+Run names:
+
+| Algorithm | Random seed | Run name |
+|---|---:|---|
+| FedAvg | 42 | `fedavg_seed42` |
+| FedProx | 42 | `fedprox_mu0.1_seed42` |
+| FedAvg | 43 | `fedavg_seed43` |
+| FedProx | 43 | `fedprox_mu0.1_seed43` |
+| FedAvg | 44 | `fedavg_seed44` |
+| FedProx | 44 | `fedprox_mu0.1_seed44` |
+
+The tracking pipeline records global and client-level metrics across communication rounds, including accuracy, loss, update norms, and cosine similarity where implemented.
+
+## Generated Outputs
+
+The experiment pipeline generates:
+
+- Global test accuracy and loss.
+- Per-client training accuracy and loss.
+- Per-client validation accuracy and loss.
+- Client update norms and cosine similarity.
+- Per-run CSV and JSON metric files.
+- Combined metrics across all six runs.
+- Mean and standard deviation summaries across seeds.
+- Experiment plots and model checkpoints.
+
+Key result files:
+
+- `results/all_runs_metrics.csv`
+- `results/final_summary_across_seeds.json`
+- `results/mean_std_across_seeds.csv`
+
+## Project Structure
 
 ```text
 fl-pathmnist/
@@ -71,88 +198,65 @@ fl-pathmnist/
 └── README.md
 ```
 
-The results directory also contains per-run JSON files and model checkpoints.
+The results directory may also contain per-run JSON files and model checkpoints.
 
-## 5. Experimental Setup
+## Running the Project
 
-| Parameter | Configuration |
-|---|---|
-| Dataset | PathMNIST (MedMNIST) |
-| Framework | PyTorch |
-| Number of clients | 5 |
-| Data distribution | Non-IID Dirichlet partition |
-| Dirichlet concentration (α) | 0.3 |
-| Label noise | 40% on one client's training data |
-| Algorithms | FedAvg and FedProx |
-| Communication rounds | 30 |
-| Random seeds | 42, 43, 44 |
-| FedProx coefficient (μ) | 0.1 |
-| Experiment tracking | Weights & Biases |
-| Evaluation | Global test and client-level validation |
+### 1. Clone the repository
 
-A total of six experiments were conducted: three FedAvg runs and three FedProx runs, using the same three random seeds.
+```bash
+git clone https://github.com/Sumukhi90/fl-pathmnist.git
+cd fl-pathmnist
+```
 
-## 6. Implementation Details
+### 2. Create and activate a virtual environment
 
-The implementation includes:
+```bash
+python -m venv .venv
+```
 
-- **PathMNIST integration:** Dataset loading and preprocessing using MedMNIST.
-- **Non-IID partitioning:** Distribution of client data using a Dirichlet distribution with α = 0.3.
-- **Label noise:** 40% label noise introduced into one client's training labels.
-- **FedAvg:** Aggregation of locally trained client models using federated averaging.
-- **FedProx:** Proximal regularization to constrain local model updates relative to the global model.
-- **Client-level evaluation:** Tracking of individual client training and validation metrics.
-- **Global evaluation:** Evaluation using global test accuracy and loss.
-- **Update analysis:** Calculation of client update norms and cosine similarity.
-- **Experiment tracking:** Recording experiment metrics across communication rounds using W&B.
-- **Visualization:** Generation of plots for global and client-level performance.
+On Windows PowerShell:
 
-## 7. Experimental Results
+```powershell
+.venv\Scripts\Activate.ps1
+```
 
-The following results represent the mean and standard deviation across three independent runs (seeds 42, 43, and 44), evaluated after 30 communication rounds.
+### 3. Install dependencies
 
-### FedAvg vs. FedProx
+```bash
+pip install -r requirements.txt
+```
 
-| Metric | FedAvg | FedProx |
-|---|---:|---:|
-| Global test accuracy | **70.43% ± 3.67%** | 68.43% ± 4.45% |
-| Global test loss | **0.9545 ± 0.0892** | 1.0362 ± 0.0922 |
-| Mean client validation accuracy | **66.01% ± 3.16%** | 61.22% ± 2.93% |
-| Global update norm | 0.3211 ± 0.0498 | 0.2285 ± 0.0307 |
+### 4. Configure experiment tracking
 
-### Noisy Client Analysis
+Configure your Weights & Biases account and project settings using the project's tracking configuration. Authenticate with W&B before running experiments if live logging is required.
 
-Client 5 was assigned 40% label noise in its training data. Its validation accuracy was compared with the mean validation accuracy of the clean clients.
+### 5. Run the experiment
 
-| Metric | FedAvg | FedProx |
-|---|---:|---:|
-| Noisy client validation accuracy | 61.91% ± 5.73% | 54.45% ± 3.59% |
-| Mean clean-client validation accuracy | 67.03% ± 4.00% | 62.91% ± 3.74% |
-| Noisy-minus-clean accuracy gap | -5.12 percentage points | -8.46 percentage points |
+```bash
+python run_experiment.py
+```
 
-### Observations
+The experiment script runs the configured FedAvg and FedProx experiments and generates the corresponding metrics and result files.
 
-1. **Global performance:** FedAvg achieved higher mean test accuracy than FedProx by approximately 2.01 percentage points and also produced a lower mean test loss.
+## Limitations
 
-2. **Client-level performance:** FedAvg achieved higher mean client validation accuracy in this experimental configuration.
+- The benchmark uses one dataset, PathMNIST, and one model and optimization configuration.
+- The experiments use five simulated clients rather than physically distributed devices.
+- Label noise is applied to one client's training labels; other forms and distributions of noise are not evaluated.
+- Only three random seeds are used, so the reported variability is based on a limited number of runs.
+- The results do not establish that FedAvg or FedProx is universally superior.
+- The benchmark does not evaluate real-world communication costs, network failures, or large-scale client participation.
 
-3. **Noisy-client behavior:** The noisy client's mean validation accuracy was lower than the clean-client average for both algorithms.
+## Conclusion
 
-4. **Effect of label noise:** The average noisy-minus-clean accuracy gap was approximately -5.12 percentage points for FedAvg and -8.46 percentage points for FedProx.
+This benchmark compares FedAvg and FedProx under non-IID client data and client-specific label noise using PathMNIST.
 
-5. **Update behavior:** FedProx had a smaller mean global update norm than FedAvg, indicating smaller measured global updates in these experiments.
+Across three seeds and 30 communication rounds, FedAvg achieved higher mean global test accuracy and lower test loss in the tested configuration. The noisy client performed below the clean-client average under both algorithms. FedProx produced smaller global update norms, but this did not translate into better test performance in these experiments.
 
-6. **Variability:** Results varied across random seeds, highlighting the importance of evaluating federated learning algorithms across multiple runs.
+The results highlight the importance of evaluating federated optimization methods using both global and client-level metrics, particularly when client data distributions and label quality differ.
 
-These results are specific to the selected dataset, partitioning configuration, noise level, model, and optimization settings. They do not establish that one algorithm will outperform the other under all federated learning conditions.
+## Repository
 
-## 8. Generated Outputs
-
-The experiment pipeline generates:
-
-- Global test accuracy and loss.
-- Individual client training and validation accuracy.
-- Individual client training and validation loss.
-- Client update norms and cosine similarity.
-- Per-run CSV and JSON metrics.
-- Combined metrics across all six runs
+**GitHub:**  
+https://github.com/Sumukhi90/fl-pathmnist
