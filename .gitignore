@@ -20,3 +20,6 @@ Thumbs.db
 
 # Credentials
 .netrc
+# Model checkpoints
+*.pth
+*.pt
